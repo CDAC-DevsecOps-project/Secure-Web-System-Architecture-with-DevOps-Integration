@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mariadb-config
+data:
+  MYSQL_DATABASE: productdb
+  MYSQL_USER: appuser
+  MYSQL_PASSWORD: appuser@123
+  MYSQL_ROOT_PASSWORD: root

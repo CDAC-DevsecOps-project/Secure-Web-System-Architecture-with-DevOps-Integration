@@ -1,0 +1,45 @@
+pipeline {
+    agent any
+
+    environment {
+        DOCKER_IMAGE = "priyankagotkhinde71/cdac-project-flask-app:${BUILD_NUMBER}"
+    }
+
+    stages {
+        stage('Clone Repo') {
+            steps {
+                git branch: 'main', url: 'https://github.com/CDAC-DevsecOps-project/Secure-Web-System-Architecture-with-DevOps-Integration.git'
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                dir('app') {
+                    sh 'docker build -t $DOCKER_IMAGE .'
+                }
+            }
+        }
+
+        stage('Push to DockerHub') {
+            steps {
+                dir('app') {
+                    withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'USER', passwordVariable: 'PASS')]) {
+                        sh 'echo $PASS | docker login -u $USER --password-stdin'
+                        sh 'docker push $DOCKER_IMAGE'
+                    }
+                }
+            }
+        }
+
+        stage('Update K8s Deployment') {
+            steps {
+                dir('app') {
+                    withCredentials([file(credentialsId: 'k8s-config', variable: 'KUBECONFIG')]) {
+                        sh "sed -i 's|priyankagotkhinde71/cdac-project-flask-app:.*|$DOCKER_IMAGE|' flask-deployment.yaml"
+                        sh 'kubectl apply -f flask-deployment.yaml'
+                    }
+                }
+            }
+        }
+    }
+}
