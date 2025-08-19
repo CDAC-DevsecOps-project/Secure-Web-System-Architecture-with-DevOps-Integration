@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mariadb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mariadb
+  template:
+    metadata:
+      labels:
+        app: mariadb
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: worker-node2  
+      containers:
+      - name: mariadb
+        image: docker.io/library/mariadb:11
+        ports:
+        - containerPort: 3306
+        env:
+        - name: MYSQL_DATABASE
+          value: productdb
+        - name: MYSQL_USER
+          value: appuser
+        - name: MYSQL_PASSWORD
+          value: appuser@123
+        - name: MYSQL_ROOT_PASSWORD
+          value: root
+        volumeMounts:
+        - mountPath: /var/lib/mysql
+          name: mariadb-storage
+      volumes:
+      - name: mariadb-storage
+        persistentVolumeClaim:
+          claimName: mariadb-pvc
